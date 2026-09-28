@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>tsjeng.nl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Alfa+Slab+One&family=Bungee+Inline&family=Titan+One&family=Shrikhand&display=swap">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; background: #1a1a1a; }
+
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  #stage {
+    position: relative;
+    width: min(70vw, 70vh);
+    height: min(70vw, 70vh);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  #stage:focus-visible {
+    outline: 3px solid #ffffff;
+    outline-offset: 6px;
+    border-radius: 8px;
+  }
+
+  .stage-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    filter: drop-shadow(0 10px 18px rgba(0,0,0,0.55));
+    opacity: 0;
+    animation: pop-in 0.5s cubic-bezier(.2,1.4,.4,1) forwards;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage-inner { animation: none; opacity: 1; }
+  }
+
+  @keyframes pop-in {
+    0%   { opacity: 0; transform: scale(0.4) rotate(var(--tilt, 0deg)); }
+    70%  { opacity: 1; transform: scale(1.08) rotate(var(--tilt, 0deg)); }
+    100% { opacity: 1; transform: scale(1) rotate(var(--tilt, 0deg)); }
+  }
+
+  .bg-shape { position: absolute; inset: 0; }
+
+  .shape-poly { position: absolute; inset: 0; }
+
+  .shape-poly::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: var(--dots, 0);
+    background-image: radial-gradient(rgba(0,0,0,0.18) 1.4px, transparent 1.5px);
+    background-size: 7px 7px;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  .cloud-svg { position: absolute; inset: -8%; width: 116%; height: 116%; }
+
+  .speedlines { position: absolute; inset: 0; }
+
+  .speedline {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 3px;
+    background: rgba(255,255,255,0.55);
+    transform-origin: bottom center;
+  }
+
+  .text-wrap { position: relative; z-index: 2; display: inline-block; }
+
+  .text-outline, .text-fill {
+    display: flex;
+    text-transform: uppercase;
+    line-height: 1;
+    white-space: nowrap;
+    font-size: calc(min(70vw, 70vh) * 0.17);
+  }
+
+  .text-outline { color: transparent; -webkit-text-stroke: 9px #111111; position: relative; }
+
+  .text-fill {
+    -webkit-text-stroke: 3px #ffffff;
+    position: absolute;
+    top: 0; left: 0; right: 0;
+  }
+
+  .letter { display: inline-block; }
+
+  .hint {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: system-ui, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+  }
+</style>
+</head>
+<body>
+  <h1 class="sr-only">tsjeng.nl</h1>
+  <div id="stage" role="button" tabindex="0" aria-label="Genereer een nieuwe tsjeng-logo combinatie"></div>
+  <div class="hint">klik of ververs voor een nieuwe combinatie</div>
+
+<script>
+const REROLL_COOLDOWN_MS = 500;
+const BG_TO_TEXT_WIDTH_RATIO = 0.9;
+const stageEl = document.getElementById('stage');
+
+const BACKGROUNDS = [{"shape": "burst", "pal": {"bg": "#f6e63c", "text": "#e8112d"}, "tilt": -12, "clip": "polygon(62.5% 3.2%, 64.8% 22.0%, 83.1% 11.5%, 75.0% 31.5%, 94.4% 30.6%, 80.8% 44.2%, 101.0% 51.9%, 80.0% 58.0%, 95.1% 73.8%, 74.6% 71.1%, 78.8% 89.1%, 62.8% 79.4%, 59.3% 98.9%, 48.8% 81.8%, 36.5% 100.2%, 35.5% 77.4%, 18.6% 86.4%, 23.3% 69.7%, 4.5% 69.8%, 19.3% 55.8%, 0.7% 48.2%, 19.4% 41.8%, 4.2% 25.8%, 26.3% 29.6%, 21.0% 10.7%, 37.1% 20.5%, 40.7% 0.7%, 51.2% 16.9%)", "halftone": true, "speedlines": false}, {"shape": "star8", "pal": {"bg": "#e8112d", "text": "#ffffff"}, "tilt": -7, "clip": "polygon(59.3% 2.4%, 59.7% 35.4%, 92.4% 21.4%, 67.5% 46.4%, 97.5% 59.2%, 65.0% 60.0%, 77.8% 91.2%, 53.7% 68.1%, 40.7% 97.9%, 40.1% 64.9%, 9.0% 77.7%, 32.6% 53.5%, -0.3% 40.2%, 35.0% 40.1%, 22.6% 9.3%, 46.5% 32.7%)", "halftone": false, "speedlines": true}, {"shape": "cloud", "pal": {"bg": "#00bbf9", "text": "#111111"}, "tilt": 6, "circles": [[79.4, 50.0, 21.2], [76.9, 65.1, 23.7], [63.6, 76.3, 23.9], [45.5, 77.5, 18.5], [31.6, 68.2, 21.0], [21.0, 57.4, 21.4], [23.6, 43.4, 17.5], [28.7, 28.4, 20.8], [45.6, 23.1, 16.8], [62.2, 26.9, 23.3], [76.0, 35.5, 23.9]], "cx": 50, "cy": 50, "rx": 30, "ry": 26}, {"shape": "star8", "pal": {"bg": "#9b5de5", "text": "#ffbe0b"}, "tilt": -6, "clip": "polygon(52.6% 0.2%, 61.2% 32.8%, 94.4% 27.4%, 70.4% 51.1%, 92.1% 77.4%, 58.8% 67.3%, 47.5% 98.3%, 38.7% 67.4%, 6.8% 72.0%, 30.5% 49.0%, 8.6% 23.1%, 40.8% 31.9%)", "halftone": false, "speedlines": true}, {"shape": "cloud", "pal": {"bg": "#ff206e", "text": "#fbff12"}, "tilt": -8, "circles": [[79.9, 50.0, 20.0], [75.7, 66.3, 18.2], [59.0, 74.0, 20.9], [40.5, 75.5, 16.3], [27.6, 63.9, 17.1], [18.6, 50.0, 21.5], [23.4, 33.0, 22.1], [41.2, 26.7, 22.1], [60.2, 22.5, 18.8], [71.9, 36.4, 19.0]], "cx": 50, "cy": 50, "rx": 30, "ry": 26}];
+const FOREGROUNDS = [{"font": "'Bangers', cursive", "weight": "normal", "tracking": "0.02em", "text_tilt": 1, "font_scale": 0.98, "letters": [{"rot": -2.1, "dy": -2.1, "scale": 1.02}, {"rot": -5.1, "dy": 0.2, "scale": 0.99}, {"rot": -5.3, "dy": 0.0, "scale": 0.96}, {"rot": -0.8, "dy": -2.6, "scale": 0.97}, {"rot": -0.9, "dy": 2.0, "scale": 0.97}, {"rot": -3.3, "dy": 0.8, "scale": 1.05}]}, {"font": "'Alfa Slab One', serif", "weight": "normal", "tracking": "0em", "text_tilt": -7, "font_scale": 0.94, "letters": [{"rot": 1.0, "dy": -1.8, "scale": 1.02}, {"rot": 5.4, "dy": -2.8, "scale": 1.0}, {"rot": -1.8, "dy": -1.3, "scale": 1.04}, {"rot": 5.6, "dy": 1.8, "scale": 1.0}, {"rot": 4.5, "dy": -2.4, "scale": 1.0}, {"rot": -0.4, "dy": -2.6, "scale": 1.01}]}, {"font": "'Bungee Inline', cursive", "weight": "normal", "tracking": "0.01em", "text_tilt": -7, "font_scale": 1.04, "letters": [{"rot": -2.6, "dy": -0.2, "scale": 1.01}, {"rot": -4.8, "dy": 0.0, "scale": 1.05}, {"rot": 0.8, "dy": 0.1, "scale": 1.03}, {"rot": -0.6, "dy": -1.3, "scale": 1.04}, {"rot": -4.0, "dy": 2.3, "scale": 1.04}, {"rot": 0.6, "dy": 0.1, "scale": 0.97}]}, {"font": "'Titan One', cursive", "weight": "normal", "tracking": "0em", "text_tilt": -2, "font_scale": 1.02, "letters": [{"rot": -4.5, "dy": -0.9, "scale": 0.98}, {"rot": 1.1, "dy": 1.3, "scale": 1.01}, {"rot": 0.5, "dy": 1.9, "scale": 1.03}, {"rot": -0.4, "dy": -1.3, "scale": 0.97}, {"rot": -5.4, "dy": -2.7, "scale": 1.0}, {"rot": 0.1, "dy": -0.3, "scale": 1.03}]}, {"font": "'Shrikhand', cursive", "weight": "normal", "tracking": "0.01em", "text_tilt": 1, "font_scale": 1.01, "letters": [{"rot": 0.8, "dy": 1.4, "scale": 0.96}, {"rot": 4.6, "dy": 0.8, "scale": 1.02}, {"rot": 4.1, "dy": -0.9, "scale": 1.03}, {"rot": 2.1, "dy": -2.2, "scale": 1.02}, {"rot": 1.2, "dy": 1.9, "scale": 1.03}, {"rot": 1.9, "dy": 0.7, "scale": 1.04}]}];
+
+function letterSpans(word, letters) {
+  return word.split('').map((ch, i) => {
+    const lj = letters[i];
+    return `<span class="letter" aria-hidden="true" style="transform: rotate(${lj.rot}deg) translateY(${lj.dy}px) scale(${lj.scale});">${ch}</span>`;
+  }).join('');
+}
+
+function renderBackground(bg, idx) {
+  if (bg.shape === 'burst' || bg.shape === 'star8') {
+    const dots = bg.halftone ? 1 : 0;
+    let html = `<div class="shape-poly" style="clip-path:${bg.clip}; background:${bg.pal.bg}; --dots:${dots};"></div>`;
+    if (bg.speedlines) {
+      let lines = '';
+      for (let a = 0; a < 360; a += 30) {
+        const ang = a + (Math.random() * 16 - 8);
+        const length = 14 + Math.random() * 12;
+        lines += `<div class="speedline" style="transform: rotate(${ang}deg) translateY(-52%); height:${length}px;"></div>`;
+      }
+      html += `<div class="speedlines">${lines}</div>`;
+    }
+    return html;
+  } else if (bg.shape === 'cloud') {
+    const filtId = 'goo' + idx;
+    const circles = bg.circles.map(c => `<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}" />`).join('');
+    const cx = bg.cx, cy = bg.cy, rx = bg.rx, ry = bg.ry;
+    return `
+      <svg class="cloud-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <filter id="${filtId}">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" result="blur" />
+            <feColorMatrix in="blur" mode="matrix"
+              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -10" result="goo" />
+            <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+          </filter>
+        </defs>
+        <g filter="url(#${filtId})" fill="#111111">
+          ${circles}
+          <ellipse cx="${cx}" cy="${cy}" rx="${rx+3}" ry="${ry+3}" />
+        </g>
+        <g filter="url(#${filtId})" fill="${bg.pal.bg}" transform="translate(50 50) scale(0.90) translate(-50 -50)">
+          ${circles}
+          <ellipse cx="${cx}" cy="${cy}" rx="${rx+3}" ry="${ry+3}" />
+        </g>
+      </svg>`;
+  }
+  return '';
+}
+
+function render() {
+  const bgIdx = Math.floor(Math.random() * BACKGROUNDS.length);
+  const fgIdx = Math.floor(Math.random() * FOREGROUNDS.length);
+  const bg = BACKGROUNDS[bgIdx];
+  const fg = FOREGROUNDS[fgIdx];
+
+  const shapeHtml = renderBackground(bg, bgIdx);
+  const letterHtml = letterSpans('tsjeng', fg.letters);
+
+  stageEl.innerHTML = `
+    <div class="stage-inner" aria-hidden="true" style="--tilt:${bg.tilt}deg; transform: rotate(${bg.tilt}deg);">
+      <div class="bg-shape">${shapeHtml}</div>
+      <div class="text-wrap" style="transform: rotate(${fg.text_tilt}deg) scale(${fg.font_scale});">
+        <span class="text-outline" style="font-family:${fg.font}; font-weight:${fg.weight}; letter-spacing:${fg.tracking};">${letterHtml}</span>
+        <span class="text-fill" style="font-family:${fg.font}; font-weight:${fg.weight}; letter-spacing:${fg.tracking}; color:${bg.pal.text};">${letterHtml}</span>
+      </div>
+    </div>
+  `;
+
+  const bgShape = stageEl.querySelector('.bg-shape');
+  const textWrap = stageEl.querySelector('.text-wrap');
+  const textWidth = textWrap.offsetWidth * fg.font_scale;
+  const bgScale = (BG_TO_TEXT_WIDTH_RATIO * textWidth) / stageEl.offsetWidth;
+  bgShape.style.transform = `scale(${bgScale.toFixed(3)})`;
+}
+
+let rerollCooldown = false;
+function reroll() {
+  if (rerollCooldown) return;
+  rerollCooldown = true;
+  render();
+  setTimeout(() => { rerollCooldown = false; }, REROLL_COOLDOWN_MS);
+}
+stageEl.addEventListener('click', reroll);
+stageEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+    e.preventDefault();
+    reroll();
+  }
+});
+
+render();
+</script>
+</body>
+</html>

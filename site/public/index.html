@@ -3,237 +3,681 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="color-scheme" content="dark">
-<title>tsjeng.nl</title>
+<title>tsjeng</title>
+<meta name="description" content="Het geluid van een bekken.">
+<meta name="theme-color" content="#F2C230">
+<link rel="icon" href="/bimi-logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bangers&family=Alfa+Slab+One&family=Bungee+Inline&family=Titan+One&family=Shrikhand&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Dela+Gothic+One&display=swap">
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --brass: #F2C230;
+    --ink: #2A0F14;
+    --red: #FF3B1F;
 
-  html, body { height: 100%; background: #1a1a1a; }
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    --step--1: clamp(0.83rem, 0.78rem + 0.29vw, 1.00rem);
+    --step-0:  clamp(1.00rem, 0.91rem + 0.43vw, 1.25rem);
+    --space-s: clamp(1.00rem, 0.91rem + 0.43vw, 1.25rem);
+    --space-m: clamp(1.50rem, 1.37rem + 0.65vw, 1.88rem);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body { height: 100%; margin: 0; }
 
   body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    background: var(--brass);
+    color: var(--ink);
+    font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+    font-size: var(--step-0);
+    line-height: 1.4;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection { background: var(--ink); color: var(--brass); }
+
+  /* Lathe grooves of a cymbal, centred off-canvas bottom right. */
+  .grooves {
+    position: fixed;
+    inset: 0;
+    background: repeating-radial-gradient(circle at 100% 115%, rgba(42,15,20,0.07) 0 1px, transparent 1px 8px);
+    pointer-events: none;
+  }
+
+  .grooves::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    opacity: 0.12;
+    mix-blend-mode: multiply;
   }
 
   .sr-only {
     position: absolute;
     width: 1px;
     height: 1px;
-    padding: 0;
     margin: -1px;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
-    border: 0;
   }
 
-  #stage {
+  main {
     position: relative;
-    width: min(70vw, 70vh);
-    height: min(70vw, 70vh);
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--space-m);
+  }
+
+  header {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-s);
+  }
+
+  .entry { margin: 0; max-width: 30ch; }
+  .entry b { font-weight: 700; }
+
+  .sound {
+    flex: none;
+    font: inherit;
+    font-size: var(--step--1);
+    font-weight: 700;
+    color: var(--ink);
+    background: transparent;
+    border: 2px solid var(--ink);
+    border-radius: 999px;
+    padding: 0.35em 1em;
     cursor: pointer;
+    transition: background-color 0.2s var(--ease-out), color 0.2s var(--ease-out), transform 0.15s var(--ease-out);
   }
 
-  #stage:focus-visible {
-    outline: 3px solid #ffffff;
-    outline-offset: 6px;
-    border-radius: 8px;
+  @media (hover: hover) {
+    .sound:hover { background: var(--ink); color: var(--brass); }
   }
 
-  .stage-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
+  .sound:active { transform: translateY(2px); }
+
+  .sound:focus-visible, .cymbal:focus-visible {
+    outline: 3px solid var(--red);
+    outline-offset: 4px;
+  }
+
+  .sound[aria-pressed="true"] { background: var(--ink); color: var(--brass); }
+
+  .sound.nudge { animation: nudge 0.6s var(--ease-spring) 2; }
+
+  @keyframes nudge {
+    0%, 100% { transform: rotate(0); }
+    30% { transform: rotate(-8deg) scale(1.12); }
+    60% { transform: rotate(6deg) scale(1.06); }
+  }
+
+  .cymbal {
     display: flex;
-    align-items: center;
-    justify-content: center;
-    filter: drop-shadow(0 10px 18px rgba(0,0,0,0.55));
-    opacity: 0;
-    animation: pop-in 0.5s cubic-bezier(.2,1.4,.4,1) forwards;
+    align-items: flex-end;
+    min-height: 0;
+    min-width: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .stage-inner { animation: none; opacity: 1; }
+  .word {
+    display: inline-block;
+    font-family: 'Dela Gothic One', sans-serif;
+    font-size: 20vw;
+    line-height: 0.82;
+    padding-bottom: 0.26em;
+    letter-spacing: -0.03em;
+    white-space: nowrap;
   }
 
-  @keyframes pop-in {
-    0%   { opacity: 0; transform: scale(0.4) rotate(var(--tilt, 0deg)); }
-    70%  { opacity: 1; transform: scale(1.08) rotate(var(--tilt, 0deg)); }
-    100% { opacity: 1; transform: scale(1) rotate(var(--tilt, 0deg)); }
+  .word span {
+    position: relative;
+    display: inline-block;
+    isolation: isolate;
+    transition: transform 0.9s var(--ease-spring);
   }
 
-  .bg-shape { position: absolute; inset: 0; }
-
-  .shape-poly { position: absolute; inset: 0; }
-
-  .shape-poly::before {
-    content: '';
+  /* Second print colour: a red halftone copy of each letter, slightly off-register. */
+  .word span::before {
+    content: attr(data-ch);
     position: absolute;
+    left: 0;
+    top: -0.3em;
+    padding: 0.3em 0;
+    z-index: -1;
+    color: transparent;
+    background: radial-gradient(circle, var(--red) 42%, transparent 46%) 0 0 / 0.045em 0.045em;
+    -webkit-background-clip: text;
+    background-clip: text;
+    translate: 0.05em 0.045em;
+    transition: translate 0.9s var(--ease-spring);
+  }
+
+  .word.struck span { transition: transform 0.06s var(--ease-out); }
+
+  .word.struck span::before {
+    translate: 0.11em 0.08em;
+    transition: translate 0.06s var(--ease-out);
+  }
+
+  .word.enter span {
+    animation: drop 0.7s var(--ease-spring) backwards;
+    animation-delay: calc(var(--i) * 70ms);
+  }
+
+  @keyframes drop {
+    from { transform: translateY(-120%) rotate(-12deg); opacity: 0; }
+  }
+
+  .holding .word span { animation: buzz 0.07s steps(2) infinite; }
+
+  @keyframes buzz {
+    50% { translate: var(--bx, 1px) var(--by, -1px); }
+  }
+
+  footer {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-s);
+    padding-top: var(--space-s);
+    font-size: var(--step--1);
+  }
+
+  footer p { margin: 0; }
+
+  .flash {
+    position: fixed;
     inset: 0;
-    opacity: var(--dots, 0);
-    background-image: radial-gradient(rgba(0,0,0,0.18) 1.4px, transparent 1.5px);
-    background-size: 7px 7px;
+    background: var(--red);
+    opacity: 0;
     mix-blend-mode: multiply;
     pointer-events: none;
   }
 
-  .cloud-svg { position: absolute; inset: -8%; width: 116%; height: 116%; }
+  .flash.on { animation: flash 0.28s var(--ease-out); }
 
-  .speedlines { position: absolute; inset: 0; }
-
-  .speedline {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 3px;
-    background: rgba(255,255,255,0.55);
-    transform-origin: bottom center;
+  @keyframes flash {
+    from { opacity: 0.55; }
+    to { opacity: 0; }
   }
 
-  .text-wrap { position: relative; z-index: 2; display: inline-block; }
-
-  .text-outline, .text-fill {
-    display: flex;
-    text-transform: uppercase;
-    line-height: 1;
-    white-space: nowrap;
-    font-size: calc(min(70vw, 70vh) * 0.17);
-  }
-
-  .text-outline { color: transparent; -webkit-text-stroke: 9px #111111; position: relative; }
-
-  .text-fill {
-    -webkit-text-stroke: 3px #ffffff;
-    position: absolute;
-    top: 0; left: 0; right: 0;
-  }
-
-  .letter { display: inline-block; }
-
-  .hint {
+  .ring {
     position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: system-ui, sans-serif;
-    font-size: 11px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.3);
+    width: 120px;
+    height: 120px;
+    margin: -60px 0 0 -60px;
+    border: 4px solid var(--ink);
+    border-radius: 50%;
+    pointer-events: none;
+    animation: ring 0.8s var(--ease-out) forwards;
+  }
+
+  @keyframes ring {
+    from { transform: scale(0.2); opacity: 1; }
+    to { transform: scale(6); opacity: 0; border-width: 1px; }
+  }
+
+  .confetti {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Finale: the cymbal falls off its stand. */
+  .word.fall span {
+    animation: fall 0.9s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+    animation-delay: calc(var(--i) * 25ms);
+  }
+
+  @keyframes fall {
+    to { transform: translate(var(--fx, 0), 120vh) rotate(var(--fr, 90deg)); }
+  }
+
+  @media (orientation: portrait) {
+    .cymbal { align-items: center; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .word span, .word.struck span, .word span::before, .word.struck span::before { transition: none; }
+    .word.enter span, .word.fall span, .holding .word span, .sound.nudge, .flash.on { animation: none; }
+    .ring { display: none; }
   }
 </style>
 </head>
 <body>
-  <h1 class="sr-only">tsjeng.nl</h1>
-  <div id="stage" role="button" tabindex="0" aria-label="Genereer een nieuwe tsjeng-logo combinatie"></div>
-  <div class="hint">klik of ververs voor een nieuwe combinatie</div>
+  <div class="grooves" aria-hidden="true"></div>
+  <main>
+    <header>
+      <p class="entry"><b>tsjeng</b> <i>tussenwerpsel</i><br>Het geluid van een bekken. Ook te gebruiken als iets net gelukt is.</p>
+      <button class="sound" type="button" aria-pressed="false">geluid uit</button>
+    </header>
+
+    <h1 class="sr-only">tsjeng</h1>
+    <button class="cymbal" type="button" aria-label="Sla op het bekken. Houd vast voor een langere tsjeng.">
+      <span class="word enter" aria-hidden="true"></span>
+    </button>
+
+    <footer>
+      <p class="hint">Klik op het woord. Houd vast voor een langere tsjeng.</p>
+      <p>tsjeng.nl</p>
+    </footer>
+  </main>
+  <div class="flash" aria-hidden="true"></div>
 
 <script>
-const REROLL_COOLDOWN_MS = 500;
-const BG_TO_TEXT_WIDTH_RATIO = 0.9;
-const stageEl = document.getElementById('stage');
+const MAX_E = 24;
+const GROW_DELAY_MS = 220;
+const GROW_EVERY_MS = 110;
+const SHRINK_EVERY_MS = 35;
 
-const BACKGROUNDS = [{"shape": "burst", "pal": {"bg": "#f6e63c", "text": "#e8112d"}, "tilt": -12, "clip": "polygon(62.5% 3.2%, 64.8% 22.0%, 83.1% 11.5%, 75.0% 31.5%, 94.4% 30.6%, 80.8% 44.2%, 101.0% 51.9%, 80.0% 58.0%, 95.1% 73.8%, 74.6% 71.1%, 78.8% 89.1%, 62.8% 79.4%, 59.3% 98.9%, 48.8% 81.8%, 36.5% 100.2%, 35.5% 77.4%, 18.6% 86.4%, 23.3% 69.7%, 4.5% 69.8%, 19.3% 55.8%, 0.7% 48.2%, 19.4% 41.8%, 4.2% 25.8%, 26.3% 29.6%, 21.0% 10.7%, 37.1% 20.5%, 40.7% 0.7%, 51.2% 16.9%)", "halftone": true, "speedlines": false}, {"shape": "star8", "pal": {"bg": "#e8112d", "text": "#ffffff"}, "tilt": -7, "clip": "polygon(59.3% 2.4%, 59.7% 35.4%, 92.4% 21.4%, 67.5% 46.4%, 97.5% 59.2%, 65.0% 60.0%, 77.8% 91.2%, 53.7% 68.1%, 40.7% 97.9%, 40.1% 64.9%, 9.0% 77.7%, 32.6% 53.5%, -0.3% 40.2%, 35.0% 40.1%, 22.6% 9.3%, 46.5% 32.7%)", "halftone": false, "speedlines": true}, {"shape": "cloud", "pal": {"bg": "#00bbf9", "text": "#111111"}, "tilt": 6, "circles": [[79.4, 50.0, 21.2], [76.9, 65.1, 23.7], [63.6, 76.3, 23.9], [45.5, 77.5, 18.5], [31.6, 68.2, 21.0], [21.0, 57.4, 21.4], [23.6, 43.4, 17.5], [28.7, 28.4, 20.8], [45.6, 23.1, 16.8], [62.2, 26.9, 23.3], [76.0, 35.5, 23.9]], "cx": 50, "cy": 50, "rx": 30, "ry": 26}, {"shape": "star8", "pal": {"bg": "#9b5de5", "text": "#ffbe0b"}, "tilt": -6, "clip": "polygon(52.6% 0.2%, 61.2% 32.8%, 94.4% 27.4%, 70.4% 51.1%, 92.1% 77.4%, 58.8% 67.3%, 47.5% 98.3%, 38.7% 67.4%, 6.8% 72.0%, 30.5% 49.0%, 8.6% 23.1%, 40.8% 31.9%)", "halftone": false, "speedlines": true}, {"shape": "cloud", "pal": {"bg": "#ff206e", "text": "#fbff12"}, "tilt": -8, "circles": [[79.9, 50.0, 20.0], [75.7, 66.3, 18.2], [59.0, 74.0, 20.9], [40.5, 75.5, 16.3], [27.6, 63.9, 17.1], [18.6, 50.0, 21.5], [23.4, 33.0, 22.1], [41.2, 26.7, 22.1], [60.2, 22.5, 18.8], [71.9, 36.4, 19.0]], "cx": 50, "cy": 50, "rx": 30, "ry": 26}];
-const FOREGROUNDS = [{"font": "'Bangers', cursive", "weight": "normal", "tracking": "0.02em", "text_tilt": 1, "font_scale": 0.98, "letters": [{"rot": -2.1, "dy": -2.1, "scale": 1.02}, {"rot": -5.1, "dy": 0.2, "scale": 0.99}, {"rot": -5.3, "dy": 0.0, "scale": 0.96}, {"rot": -0.8, "dy": -2.6, "scale": 0.97}, {"rot": -0.9, "dy": 2.0, "scale": 0.97}, {"rot": -3.3, "dy": 0.8, "scale": 1.05}]}, {"font": "'Alfa Slab One', serif", "weight": "normal", "tracking": "0em", "text_tilt": -7, "font_scale": 0.94, "letters": [{"rot": 1.0, "dy": -1.8, "scale": 1.02}, {"rot": 5.4, "dy": -2.8, "scale": 1.0}, {"rot": -1.8, "dy": -1.3, "scale": 1.04}, {"rot": 5.6, "dy": 1.8, "scale": 1.0}, {"rot": 4.5, "dy": -2.4, "scale": 1.0}, {"rot": -0.4, "dy": -2.6, "scale": 1.01}]}, {"font": "'Bungee Inline', cursive", "weight": "normal", "tracking": "0.01em", "text_tilt": -7, "font_scale": 1.04, "letters": [{"rot": -2.6, "dy": -0.2, "scale": 1.01}, {"rot": -4.8, "dy": 0.0, "scale": 1.05}, {"rot": 0.8, "dy": 0.1, "scale": 1.03}, {"rot": -0.6, "dy": -1.3, "scale": 1.04}, {"rot": -4.0, "dy": 2.3, "scale": 1.04}, {"rot": 0.6, "dy": 0.1, "scale": 0.97}]}, {"font": "'Titan One', cursive", "weight": "normal", "tracking": "0em", "text_tilt": -2, "font_scale": 1.02, "letters": [{"rot": -4.5, "dy": -0.9, "scale": 0.98}, {"rot": 1.1, "dy": 1.3, "scale": 1.01}, {"rot": 0.5, "dy": 1.9, "scale": 1.03}, {"rot": -0.4, "dy": -1.3, "scale": 0.97}, {"rot": -5.4, "dy": -2.7, "scale": 1.0}, {"rot": 0.1, "dy": -0.3, "scale": 1.03}]}, {"font": "'Shrikhand', cursive", "weight": "normal", "tracking": "0.01em", "text_tilt": 1, "font_scale": 1.01, "letters": [{"rot": 0.8, "dy": 1.4, "scale": 0.96}, {"rot": 4.6, "dy": 0.8, "scale": 1.02}, {"rot": 4.1, "dy": -0.9, "scale": 1.03}, {"rot": 2.1, "dy": -2.2, "scale": 1.02}, {"rot": 1.2, "dy": 1.9, "scale": 1.03}, {"rot": 1.9, "dy": 0.7, "scale": 1.04}]}];
+const cymbalEl = document.querySelector('.cymbal');
+const wordEl = document.querySelector('.word');
+const soundBtn = document.querySelector('.sound');
+const flashEl = document.querySelector('.flash');
+const hintEl = document.querySelector('.hint');
+const HINT = hintEl.textContent;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-function letterSpans(word, letters) {
-  return word.split('').map((ch, i) => {
-    const lj = letters[i];
-    return `<span class="letter" aria-hidden="true" style="transform: rotate(${lj.rot}deg) translateY(${lj.dy}px) scale(${lj.scale});">${ch}</span>`;
-  }).join('');
+const rand = (min, max) => min + Math.random() * (max - min);
+
+// --- word -----------------------------------------------------------------
+
+function letterSpan(ch, i) {
+  const s = document.createElement('span');
+  s.textContent = ch;
+  s.dataset.ch = ch;
+  s.style.setProperty('--i', i);
+  s.style.setProperty('--bx', `${rand(-2, 2).toFixed(1)}px`);
+  s.style.setProperty('--by', `${rand(-2, 2).toFixed(1)}px`);
+  return s;
 }
 
-function renderBackground(bg, idx) {
-  if (bg.shape === 'burst' || bg.shape === 'star8') {
-    const dots = bg.halftone ? 1 : 0;
-    let html = `<div class="shape-poly" style="clip-path:${bg.clip}; background:${bg.pal.bg}; --dots:${dots};"></div>`;
-    if (bg.speedlines) {
-      let lines = '';
-      for (let a = 0; a < 360; a += 30) {
-        const ang = a + (Math.random() * 16 - 8);
-        const length = 14 + Math.random() * 12;
-        lines += `<div class="speedline" style="transform: rotate(${ang}deg) translateY(-52%); height:${length}px;"></div>`;
+'tsjeng'.split('').forEach((ch, i) => wordEl.appendChild(letterSpan(ch, i)));
+const nSpan = wordEl.children[4];
+let eCount = 1;
+
+// Size the word to fill the width, leaving a little slack for jolted letters.
+const FIT_SLACK = 0.97;
+const LINE_BOX = 0.82 + 0.26;
+
+function fit() {
+  wordEl.style.fontSize = '100px';
+  const w = wordEl.getBoundingClientRect().width;
+  const size = Math.min(100 * FIT_SLACK * cymbalEl.clientWidth / w, cymbalEl.clientHeight / LINE_BOX);
+  wordEl.style.fontSize = `${size}px`;
+}
+
+function jolt(span) {
+  if (reduceMotion.matches) return;
+  span.style.transform = `translate(${rand(-0.05, 0.05)}em, ${rand(-0.14, 0.03)}em) rotate(${rand(-14, 14)}deg)`;
+}
+
+function addE() {
+  const e = letterSpan('e', 0);
+  wordEl.insertBefore(e, nSpan);
+  eCount++;
+  fit();
+  jolt(e);
+}
+
+function removeE() {
+  nSpan.previousElementSibling.remove();
+  eCount--;
+  fit();
+}
+
+// --- sound ----------------------------------------------------------------
+
+// Crash cymbal, 808-style: inharmonic square waves plus looping noise, band- and high-passed.
+const CYMBAL_FREQS = [205.3, 304.4, 369.6, 522.7, 540, 800];
+let audioCtx = null;
+let noiseBuffer = null;
+let voice = null;
+let soundOn = false;
+try { soundOn = localStorage.getItem('tsjeng-sound') === 'on'; } catch {}
+
+function strike(pitch = rand(0.9, 1.2)) {
+  if (!soundOn) return null;
+  audioCtx ??= new (window.AudioContext || window.webkitAudioContext)();
+  if (!noiseBuffer) {
+    noiseBuffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 2, audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  }
+  const t = audioCtx.currentTime;
+
+  const env = audioCtx.createGain();
+  env.gain.setValueAtTime(0.0001, t);
+  env.gain.exponentialRampToValueAtTime(0.5, t + 0.004);
+  env.gain.exponentialRampToValueAtTime(0.16, t + 0.25);
+  env.connect(audioCtx.destination);
+
+  const highpass = audioCtx.createBiquadFilter();
+  highpass.type = 'highpass';
+  highpass.frequency.value = 5000 * pitch;
+  highpass.connect(env);
+
+  const bandpass = audioCtx.createBiquadFilter();
+  bandpass.type = 'bandpass';
+  bandpass.frequency.value = 9000 * pitch;
+  bandpass.Q.value = 0.6;
+  bandpass.connect(highpass);
+
+  const sources = CYMBAL_FREQS.map(f => {
+    const osc = audioCtx.createOscillator();
+    osc.type = 'square';
+    osc.frequency.value = f * pitch;
+    const g = audioCtx.createGain();
+    g.gain.value = 0.12;
+    osc.connect(g).connect(bandpass);
+    return osc;
+  });
+
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = noiseBuffer;
+  noise.loop = true;
+  const ng = audioCtx.createGain();
+  ng.gain.value = 0.6;
+  noise.connect(ng).connect(highpass);
+  sources.push(noise);
+
+  sources.forEach(s => s.start(t));
+  return { env, sources };
+}
+
+function letRing(v) {
+  if (!v) return;
+  const t = audioCtx.currentTime;
+  v.env.gain.cancelScheduledValues(t);
+  v.env.gain.setValueAtTime(Math.max(v.env.gain.value, 0.0001), t);
+  v.env.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+  v.sources.forEach(s => s.stop(t + 1.5));
+}
+
+// Applause: a few hundred short noise bursts in one buffer, swelling then fading out.
+const APPLAUSE_SECONDS = 3;
+const APPLAUSE_CLAPS = 420;
+let applauseBuffer = null;
+
+function playApplause() {
+  if (!soundOn) return;
+  if (!applauseBuffer) {
+    const sr = audioCtx.sampleRate;
+    applauseBuffer = audioCtx.createBuffer(1, sr * APPLAUSE_SECONDS, sr);
+    const data = applauseBuffer.getChannelData(0);
+    const clapLen = Math.floor(sr * 0.06);
+    for (let n = 0; n < APPLAUSE_CLAPS; n++) {
+      // Dense near the start, thinning towards the end.
+      const start = Math.floor(Math.pow(Math.random(), 1.6) * (data.length - clapLen));
+      const amp = rand(0.15, 0.5) * (1 - start / data.length);
+      const tau = sr * rand(0.006, 0.014);
+      for (let i = 0; i < clapLen; i++) {
+        data[start + i] += (Math.random() * 2 - 1) * amp * Math.exp(-i / tau);
       }
-      html += `<div class="speedlines">${lines}</div>`;
     }
-    return html;
-  } else if (bg.shape === 'cloud') {
-    const filtId = 'goo' + idx;
-    const circles = bg.circles.map(c => `<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}" />`).join('');
-    const cx = bg.cx, cy = bg.cy, rx = bg.rx, ry = bg.ry;
-    return `
-      <svg class="cloud-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <filter id="${filtId}">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="3.2" result="blur" />
-            <feColorMatrix in="blur" mode="matrix"
-              values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 24 -10" result="goo" />
-            <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
-          </filter>
-        </defs>
-        <g filter="url(#${filtId})" fill="#111111">
-          ${circles}
-          <ellipse cx="${cx}" cy="${cy}" rx="${rx+3}" ry="${ry+3}" />
-        </g>
-        <g filter="url(#${filtId})" fill="${bg.pal.bg}" transform="translate(50 50) scale(0.90) translate(-50 -50)">
-          ${circles}
-          <ellipse cx="${cx}" cy="${cy}" rx="${rx+3}" ry="${ry+3}" />
-        </g>
-      </svg>`;
+    let peak = 0;
+    for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i]));
+    for (let i = 0; i < data.length; i++) data[i] *= 0.9 / peak;
   }
-  return '';
+  const t = audioCtx.currentTime;
+  const src = audioCtx.createBufferSource();
+  src.buffer = applauseBuffer;
+  const bandpass = audioCtx.createBiquadFilter();
+  bandpass.type = 'bandpass';
+  bandpass.frequency.value = 1400;
+  bandpass.Q.value = 0.5;
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.5, t + 0.25);
+  src.connect(bandpass).connect(g).connect(audioCtx.destination);
+  src.start(t + 0.15);
 }
 
-function render() {
-  const bgIdx = Math.floor(Math.random() * BACKGROUNDS.length);
-  const fgIdx = Math.floor(Math.random() * FOREGROUNDS.length);
-  const bg = BACKGROUNDS[bgIdx];
-  const fg = FOREGROUNDS[fgIdx];
-
-  const shapeHtml = renderBackground(bg, bgIdx);
-  const letterHtml = letterSpans('tsjeng', fg.letters);
-
-  stageEl.innerHTML = `
-    <div class="stage-inner" aria-hidden="true" style="--tilt:${bg.tilt}deg; transform: rotate(${bg.tilt}deg);">
-      <div class="bg-shape">${shapeHtml}</div>
-      <div class="text-wrap" style="transform: rotate(${fg.text_tilt}deg) scale(${fg.font_scale});">
-        <span class="text-outline" style="font-family:${fg.font}; font-weight:${fg.weight}; letter-spacing:${fg.tracking};">${letterHtml}</span>
-        <span class="text-fill" style="font-family:${fg.font}; font-weight:${fg.weight}; letter-spacing:${fg.tracking}; color:${bg.pal.text};">${letterHtml}</span>
-      </div>
-    </div>
-  `;
-
-  const bgShape = stageEl.querySelector('.bg-shape');
-  const textWrap = stageEl.querySelector('.text-wrap');
-  const textWidth = textWrap.offsetWidth * fg.font_scale;
-  const bgScale = (BG_TO_TEXT_WIDTH_RATIO * textWidth) / stageEl.offsetWidth;
-  bgShape.style.transform = `scale(${bgScale.toFixed(3)})`;
+function syncSound() {
+  soundBtn.textContent = soundOn ? 'geluid aan' : 'geluid uit';
+  soundBtn.setAttribute('aria-pressed', String(soundOn));
 }
 
-let rerollCooldown = false;
-function reroll() {
-  if (rerollCooldown) return;
-  rerollCooldown = true;
-  render();
-  setTimeout(() => { rerollCooldown = false; }, REROLL_COOLDOWN_MS);
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn;
+  try { localStorage.setItem('tsjeng-sound', soundOn ? 'on' : 'off'); } catch {}
+  soundBtn.classList.remove('nudge');
+  syncSound();
+});
+syncSound();
+
+// --- interaction ----------------------------------------------------------
+
+let holding = false;
+let growDelay = null;
+let growTimer = null;
+let shrinkTimer = null;
+let nudged = false;
+let fallen = false;
+const FINALE_RESET_MS = 1400;
+
+function spawnRing(x, y) {
+  if (reduceMotion.matches) return;
+  const ring = document.createElement('div');
+  ring.className = 'ring';
+  ring.style.left = `${x}px`;
+  ring.style.top = `${y}px`;
+  ring.addEventListener('animationend', () => ring.remove());
+  document.body.appendChild(ring);
 }
-stageEl.addEventListener('click', reroll);
-stageEl.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
-    e.preventDefault();
-    reroll();
+
+function press(x, y) {
+  if (holding || fallen) return;
+  holding = true;
+  clearInterval(shrinkTimer);
+  wordEl.classList.remove('enter');
+  hintEl.textContent = HINT;
+
+  voice = strike();
+  if (!soundOn && !nudged) {
+    nudged = true;
+    soundBtn.classList.add('nudge');
   }
+
+  wordEl.classList.add('struck');
+  [...wordEl.children].forEach(jolt);
+  flash();
+  spawnRing(x, y);
+  document.body.classList.add('holding');
+
+  growDelay = setTimeout(() => {
+    growTimer = setInterval(() => {
+      if (eCount < MAX_E) addE();
+      else finale();
+    }, GROW_EVERY_MS);
+  }, GROW_DELAY_MS);
+}
+
+function flash() {
+  flashEl.classList.remove('on');
+  flashEl.offsetWidth;
+  flashEl.classList.add('on');
+}
+
+// Confetti from two cannons in the bottom corners, in the page palette plus the logo's teal.
+const CONFETTI_COLORS = ['#FF3B1F', '#2A0F14', '#FFF6DA', '#05A89D'];
+const CONFETTI_PER_CANNON = 90;
+const CONFETTI_MS = 4200;
+
+function launchConfetti() {
+  if (reduceMotion.matches) return;
+  const canvas = document.createElement('canvas');
+  canvas.className = 'confetti';
+  canvas.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(canvas);
+  const dpr = window.devicePixelRatio || 1;
+  const w = innerWidth;
+  const h = innerHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const GRAVITY = 0.25;
+  const MAX_FALL = 3;
+  // Launch speed to reach near the top of the screen, padded for drag.
+  const power = Math.sqrt(2 * GRAVITY * 0.9 * h) * 1.4;
+  const pieces = [];
+  for (const side of [-1, 1]) {
+    for (let n = 0; n < CONFETTI_PER_CANNON; n++) {
+      const angle = rand(48, 84) * Math.PI / 180;
+      const speed = rand(0.7, 1.05) * power;
+      pieces.push({
+        x: side < 0 ? 0 : w,
+        y: h,
+        vx: -side * Math.cos(angle) * speed,
+        vy: -Math.sin(angle) * speed,
+        w: rand(7, 13),
+        h: rand(4, 7),
+        rot: rand(0, Math.PI * 2),
+        vr: rand(-0.3, 0.3),
+        flutter: rand(0, Math.PI * 2),
+        color: CONFETTI_COLORS[n % CONFETTI_COLORS.length],
+      });
+    }
+  }
+
+  const start = performance.now();
+  let last = start;
+  function frame(now) {
+    const dt = Math.min((now - last) / 16.67, 3);
+    last = now;
+    ctx.clearRect(0, 0, w, h);
+    for (const p of pieces) {
+      p.vy = Math.min(p.vy + GRAVITY * dt, MAX_FALL);
+      p.vx *= Math.pow(0.985, dt);
+      p.vy *= Math.pow(0.985, dt);
+      p.x += (p.vx + Math.sin(p.flutter) * 1.2) * dt;
+      p.y += p.vy * dt;
+      p.rot += p.vr * dt;
+      p.flutter += 0.12 * dt;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.scale(1, Math.cos(p.flutter));
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    }
+    if (now - start < CONFETTI_MS) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  // Timer, not rAF, so the canvas also goes away when the tab was in the background.
+  setTimeout(() => canvas.remove(), CONFETTI_MS);
+}
+
+function finale() {
+  holding = false;
+  fallen = true;
+  clearTimeout(growDelay);
+  clearInterval(growTimer);
+  document.body.classList.remove('holding');
+
+  letRing(voice);
+  voice = null;
+  letRing(strike(0.7));
+  playApplause();
+  launchConfetti();
+
+  flash();
+  setTimeout(flash, 160);
+  const r = wordEl.getBoundingClientRect();
+  spawnRing(r.left + r.width / 2, r.top + r.height / 2);
+  hintEl.textContent = 'Applaus! Het bekken is wel van de standaard gevallen.';
+
+  wordEl.classList.remove('struck');
+  [...wordEl.children].forEach((s, i) => {
+    s.style.setProperty('--i', i);
+    s.style.setProperty('--fx', `${rand(-30, 30).toFixed(0)}vw`);
+    s.style.setProperty('--fr', `${rand(-200, 200).toFixed(0)}deg`);
+  });
+  wordEl.classList.add('fall');
+
+  setTimeout(() => {
+    while (eCount > 1) removeE();
+    [...wordEl.children].forEach((s, i) => {
+      s.style.transform = '';
+      s.style.setProperty('--i', i);
+    });
+    wordEl.classList.remove('fall');
+    wordEl.offsetWidth;
+    wordEl.classList.add('enter');
+    fallen = false;
+  }, reduceMotion.matches ? 0 : FINALE_RESET_MS);
+}
+
+function release() {
+  if (!holding) return;
+  holding = false;
+  clearTimeout(growDelay);
+  clearInterval(growTimer);
+  document.body.classList.remove('holding');
+
+  letRing(voice);
+  voice = null;
+
+  wordEl.classList.remove('struck');
+  [...wordEl.children].forEach(s => { s.style.transform = ''; });
+
+  shrinkTimer = setInterval(() => {
+    if (eCount > 1) removeE();
+    else clearInterval(shrinkTimer);
+  }, SHRINK_EVERY_MS);
+}
+
+cymbalEl.addEventListener('pointerdown', (e) => {
+  e.preventDefault();
+  cymbalEl.setPointerCapture(e.pointerId);
+  press(e.clientX, e.clientY);
+});
+cymbalEl.addEventListener('pointerup', release);
+cymbalEl.addEventListener('pointercancel', release);
+cymbalEl.addEventListener('contextmenu', (e) => e.preventDefault());
+
+cymbalEl.addEventListener('keydown', (e) => {
+  if (e.key !== ' ' && e.key !== 'Enter') return;
+  e.preventDefault();
+  if (e.repeat) return;
+  const r = wordEl.getBoundingClientRect();
+  press(r.left + r.width / 2, r.top + r.height / 2);
+});
+cymbalEl.addEventListener('keyup', (e) => {
+  if (e.key === ' ' || e.key === 'Enter') release();
 });
 
-render();
+window.addEventListener('resize', fit);
+document.fonts.ready.then(fit);
+fit();
 </script>
 </body>
 </html>

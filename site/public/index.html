@@ -7,10 +7,26 @@
 <meta name="description" content="Het geluid van een bekken.">
 <meta name="theme-color" content="#F2C230">
 <link rel="icon" href="/bimi-logo.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700&family=Dela+Gothic+One&display=swap">
+<link rel="preload" href="/fonts/dela-gothic-one-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  /* Self-hosted, latin subset only (SIL OFL, licences next to the files). */
+  @font-face {
+    font-family: 'Dela Gothic One';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/dela-gothic-one-latin.woff2') format('woff2');
+  }
+
+  @font-face {
+    font-family: 'Bricolage Grotesque';
+    font-style: normal;
+    font-weight: 400 700;
+    font-display: swap;
+    src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2');
+  }
+
   :root {
     --brass: #F2C230;
     --ink: #2A0F14;

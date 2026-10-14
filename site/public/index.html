@@ -274,7 +274,7 @@
   <main>
     <header>
       <p class="entry"><b>tsjeng</b> <i>tussenwerpsel</i><br>Het geluid van een bekken. Ook te gebruiken als iets net gelukt is.</p>
-      <button class="sound" type="button" aria-pressed="false">geluid uit</button>
+      <button class="sound" type="button" aria-pressed="true">geluid aan</button>
     </header>
 
     <h1 class="sr-only">tsjeng</h1>
@@ -358,8 +358,8 @@ const CYMBAL_FREQS = [205.3, 304.4, 369.6, 522.7, 540, 800];
 let audioCtx = null;
 let noiseBuffer = null;
 let voice = null;
-let soundOn = false;
-try { soundOn = localStorage.getItem('tsjeng-sound') === 'on'; } catch {}
+let soundOn = true;
+try { soundOn = localStorage.getItem('tsjeng-sound') !== 'off'; } catch {}
 
 function strike(pitch = rand(0.9, 1.2)) {
   if (!soundOn) return null;

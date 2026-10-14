@@ -3,7 +3,7 @@
 Static single page, served from a Cloudflare Worker's static-assets bundle —
 no VPS involved. Deploys automatically via GitHub Actions on push to `main`.
 
-- Site source: `site/public/` (`index.html` + `.well-known/mta-sts.txt`)
+- Site source: `site/public/` (`index.html`, `bimi-logo.svg` + `.well-known/mta-sts.txt`)
 - Worker config: `wrangler.jsonc` (`name: tsjeng-nl`)
 - Deploy workflow: `.github/workflows/deploy.yml` (`cloudflare/wrangler-action`)
 
@@ -35,6 +35,15 @@ Mail is unrelated to the Worker — MX points straight at Google
   `https://mta-sts.tsjeng.nl/.well-known/mta-sts.txt` (see the Custom Domain
   note above — this hostname needs its own Custom Domain or the policy file
   becomes unreachable, which happened once during the VPS → Workers move).
+- `TXT default._bimi v=BIMI1; l=https://tsjeng.nl/bimi-logo.svg; a=;` with
+  the logo at `site/public/bimi-logo.svg` (also the site favicon). BIMI needs
+  DMARC at `p=quarantine`/`reject` with `pct=100`, which the record above has.
+  No VMC/CMC certificate (`a=` is empty), so Gmail and Apple Mail don't show
+  the logo; Yahoo, AOL and Fastmail do.
+  The logo must stay SVG Tiny PS: keep `version="1.2"` and
+  `baseProfile="tiny-ps"` on the root `<svg>`, a `<title>`, and no scripts,
+  external refs or `x`/`y` on the root. Don't run SVG optimisers on it
+  (`oxvg optimise` strips `version`).
 
 ## First-time setup (already done, for reference)
 
